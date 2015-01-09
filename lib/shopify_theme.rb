@@ -9,6 +9,7 @@ module ShopifyTheme
   PERMIT_LOWER_LIMIT = 3
   TIMBER_ZIP = "https://github.com/Shopify/Timber/archive/%s.zip"
   LAST_KNOWN_STABLE = "v1.1.0"
+  THEME_FOLDER = "#{Dir.pwd}/theme"
 
   def self.test?
     ENV['test']
@@ -97,8 +98,8 @@ module ShopifyTheme
   end
 
   def self.config
-    @config ||= if File.exist? 'config.yml'
-      config = YAML.load(File.read('config.yml'))
+    @config ||= if File.exist? "#{THEME_FOLDER}/config.yml"
+      config = YAML.load(File.read("#{THEME_FOLDER}/config.yml"))
       config
     else
       puts "config.yml does not exist!" unless test?

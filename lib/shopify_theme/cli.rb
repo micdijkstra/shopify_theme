@@ -11,7 +11,6 @@ require 'mimemagic'
 require 'terminal-notifier'
 
 module ShopifyTheme
-  THEME_FOLDER = "#{Dir.pwd}/theme"
   EXTENSIONS = [
     {mimetype: 'application/x-liquid', extensions: %w(liquid), parents: 'text/plain'},
     {mimetype: 'application/json', extensions: %w(json), parents: 'text/plain'},
@@ -102,6 +101,7 @@ module ShopifyTheme
     def upload(*keys)
       assets = keys.empty? ? local_assets_list : keys
       assets.each do |asset|
+        asset = asset.gsub("theme/", '')
         send_asset(asset, options['quiet'])
       end
       say("Done.", :green) unless options['quiet']
@@ -141,9 +141,10 @@ module ShopifyTheme
     def watch
       puts "Watching current folder: #{THEME_FOLDER}"
       watcher do |filename, event|
-        filename = filename.gsub("#{THEME_FOLDER}/", '')
+        filename = filename.gsub("#{Dir.pwd}/", '')
 
         next unless local_assets_list.include?(filename)
+
         action = if [:changed, :new].include?(event)
           :send_asset
         elsif event == :delete
@@ -171,7 +172,7 @@ module ShopifyTheme
     protected
 
     def config
-      @config ||= YAML.load_file 'config.yml'
+      @config ||= YAML.load_file "#{THEME_FOLDER}/config.yml"
     end
 
     def shop_theme_url
@@ -221,9 +222,9 @@ module ShopifyTheme
     def send_asset(asset, quiet=false)
       return unless valid?(asset)
       data = {:key => asset}
-      content = File.read(asset)
+      content = File.read("#{THEME_FOLDER}/#{asset}")
       if binary_file?(asset) || ShopifyTheme.is_binary_data?(content)
-        content = File.open(asset, "rb") { |io| io.read }
+        content = File.open("#{THEME_FOLDER}/#{asset}", "rb") { |io| io.read }
         data.merge!(:attachment => Base64.encode64(content))
       else
         data.merge!(:value => content)
