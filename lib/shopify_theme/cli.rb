@@ -8,8 +8,10 @@ require 'json'
 require 'filewatcher'
 require 'launchy'
 require 'mimemagic'
+require 'terminal-notifier'
 
 module ShopifyTheme
+  THEME_FOLDER = "#{Dir.pwd}/theme"
   EXTENSIONS = [
     {mimetype: 'application/x-liquid', extensions: %w(liquid), parents: 'text/plain'},
     {mimetype: 'application/json', extensions: %w(json), parents: 'text/plain'},
@@ -137,9 +139,9 @@ module ShopifyTheme
     method_option :quiet, :type => :boolean, :default => false
     method_option :keep_files, :type => :boolean, :default => false
     def watch
-      puts "Watching current folder: #{Dir.pwd}"
+      puts "Watching current folder: #{THEME_FOLDER}"
       watcher do |filename, event|
-        filename = filename.gsub("#{Dir.pwd}/", '')
+        filename = filename.gsub("#{THEME_FOLDER}/", '')
 
         next unless local_assets_list.include?(filename)
         action = if [:changed, :new].include?(event)
@@ -181,7 +183,7 @@ module ShopifyTheme
     private
 
     def watcher
-      FileWatcher.new(Dir.pwd).watch() do |filename, event|
+      FileWatcher.new(THEME_FOLDER).watch() do |filename, event|
         yield(filename, event)
       end
     end
@@ -231,8 +233,12 @@ module ShopifyTheme
         ShopifyTheme.send_asset(data)
       end
       if response.success?
-        say("[#{timestamp}] Uploaded: #{asset}", :green) unless quiet
+        unless quiet
+          TerminalNotifier.notify(asset, title: 'Shopify Theme', subtitle: 'Uploaded')
+          say("[#{timestamp}] Uploaded: #{asset}", :green)
+        end
       else
+        TerminalNotifier.notify(response, title: 'Shopify Theme', subtitle: "Could not upload #{asset}")
         report_error(Time.now, "Could not upload #{asset}", response)
       end
     end
