@@ -101,7 +101,6 @@ module ShopifyTheme
     def upload(*keys)
       assets = keys.empty? ? local_assets_list : keys
       assets.each do |asset|
-        asset = asset.gsub("theme/", '')
         send_asset(asset, options['quiet'])
       end
       say("Done.", :green) unless options['quiet']
@@ -139,7 +138,7 @@ module ShopifyTheme
     method_option :quiet, :type => :boolean, :default => false
     method_option :keep_files, :type => :boolean, :default => false
     def watch
-      puts "Watching current folder: #{THEME_FOLDER}"
+      puts "Watching current folder: #{ShopifyTheme.theme_path}"
       watcher do |filename, event|
         filename = filename.gsub("#{Dir.pwd}/", '')
 
@@ -172,7 +171,7 @@ module ShopifyTheme
     protected
 
     def config
-      @config ||= YAML.load_file "#{THEME_FOLDER}/config.yml"
+      @config ||= YAML.load_file "#{ShopifyTheme.theme_path}/config.yml"
     end
 
     def shop_theme_url
@@ -184,7 +183,7 @@ module ShopifyTheme
     private
 
     def watcher
-      FileWatcher.new(THEME_FOLDER).watch() do |filename, event|
+      FileWatcher.new(ShopifyTheme.theme_path).watch() do |filename, event|
         yield(filename, event)
       end
     end
@@ -220,11 +219,12 @@ module ShopifyTheme
     end
 
     def send_asset(asset, quiet=false)
+      asset = asset.gsub("#{ShopifyTheme.theme_folder}/", '')
       return unless valid?(asset)
       data = {:key => asset}
-      content = File.read("#{THEME_FOLDER}/#{asset}")
+      content = File.read("#{ShopifyTheme.theme_path}/#{asset}")
       if binary_file?(asset) || ShopifyTheme.is_binary_data?(content)
-        content = File.open("#{THEME_FOLDER}/#{asset}", "rb") { |io| io.read }
+        content = File.open("#{ShopifyTheme.theme_path}/#{asset}", "rb") { |io| io.read }
         data.merge!(:attachment => Base64.encode64(content))
       else
         data.merge!(:value => content)
