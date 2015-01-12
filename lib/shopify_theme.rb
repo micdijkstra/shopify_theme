@@ -101,7 +101,7 @@ module ShopifyTheme
   end
 
   def self.theme_folder
-    "themes/#{YAML.load(File.read("config.yml"))['theme_folder']}"
+    "themes/#{YAML.load(File.read("config.yml"))[:theme_folder]}"
   end
 
   def self.config
